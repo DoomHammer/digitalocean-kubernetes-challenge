@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bridge-sidecar
+  namespace: do-kafka
+spec:
+  containers:
+    - name: main
+      image: centos:7
+      command: ["sh", "-c", "while true; do sleep 3600; done"]
+    - name: bridge
+      image: quay.io/strimzi/kafka-bridge:0.20.2
+      command: ["/opt/strimzi/bin/kafka_bridge_run.sh", "--config-file", "/etc/strimzi-bridge/bridge.properties"]
+      env:
+        - name: BOOTSTRAP_SERVERS
+          value: do-cluster-kafka-bootstrap:9092
+      volumeMounts:
+        - name: bridge-configuration
+          mountPath: /etc/strimzi-bridge
+  volumes:
+    - name: bridge-configuration
+      configMap:
+        name: bridge-configuration
+  restartPolicy: Never
